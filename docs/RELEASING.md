@@ -31,7 +31,8 @@ remains the fallback for a build without a profile.
 repository keeps the APK as an asset of a **draft** release named "Build inputs (never publish)"
 (tag `build-inputs`, which a draft does not create). A draft is visible only to people with write
 access to the repository, and to the workflow's own token, so nothing is published. The workflow
-downloads `PvZ2-AltVerZ-1.8.3f.apk` from it when `apk_url` is empty. For a new game version, attach
+downloads `PvZ2-AltVerZ-1.8.3f.apk` from it when `apk_url` is empty (failing that, the same name
+in any draft, then any `.apk` in a draft; `build.sh` refuses a different build). For a new game version, attach
 its APK to that draft (Releases > the draft > Edit). **Never publish it.** A fork has no such draft:
 it passes a link.
 

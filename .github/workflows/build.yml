@@ -86,11 +86,16 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "$APK_URL" ]; then echo "apk=$APK_URL" >> "$GITHUB_OUTPUT"; exit 0; fi
-          # The repository's own copy: an asset of the draft release "build-inputs", which only
-          # people with write access can see (docs/RELEASING.md). A fork has none: give a link.
-          id="$(gh api "repos/$REPOSITORY/releases" --paginate \
-            --jq ".[] | select(.draft and .tag_name == \"build-inputs\") | .assets[] | select(.name == \"$APK_NAME\") | .id" | head -1)"
-          [ -n "$id" ] || { echo "no APK link given and no $APK_NAME in a build-inputs draft release" >&2; exit 1; }
+          # The repository's own copy: an asset of a draft release, which only people with write
+          # access can see (docs/RELEASING.md). The "build-inputs" draft's $APK_NAME first, then
+          # that name in any draft, then any .apk in a draft; build.sh refuses a different build.
+          assets="$(gh api "repos/$REPOSITORY/releases" --paginate \
+            --jq '.[] | select(.draft) | .tag_name as $t | .assets[] | [$t, .name, (.id | tostring)] | @tsv')"
+          id="$(awk -F'\t' -v n="$APK_NAME" '$1 == "build-inputs" && $2 == n { print $3; exit }' <<< "$assets")"
+          [ -n "$id" ] || id="$(awk -F'\t' -v n="$APK_NAME" '$2 == n { print $3; exit }' <<< "$assets")"
+          [ -n "$id" ] || id="$(awk -F'\t' 'tolower($2) ~ /\.apk$/ { print $3; exit }' <<< "$assets")"
+          [ -n "$id" ] || { echo "no APK link given and no .apk in a draft release" >&2; exit 1; }
+          echo "the APK: draft asset $id ($(awk -F'\t' -v i="$id" '$3 == i { print $1 "/" $2; exit }' <<< "$assets"))"
           mkdir -p inputs
           gh api -H "Accept: application/octet-stream" "repos/$REPOSITORY/releases/assets/$id" > "inputs/$APK_NAME"
           ls -l "inputs/$APK_NAME"
