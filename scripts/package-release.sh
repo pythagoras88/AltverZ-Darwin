@@ -18,8 +18,10 @@ out, release = map(Path, sys.argv[1:3])
 variant, version, game, artifact = sys.argv[3:]
 prefix = f"{artifact}-{game}-Darwin-{version}"
 suffix = "-Full" if variant == "full" else ""
-files = [(out / f"{artifact}.{ext}", release / f"{prefix}-{platform}{suffix}.{ext}")
-         for ext, platform in [("ipa", "iOS"), ("dmg", "Mac")]
+# This fork's iPhone/iPad file carries no platform tag (PvZ2-AltVerZ-modded-1.8.3f-Darwin-0.1.0.ipa);
+# the extension says what it is. The Mac's keeps its -Mac.
+files = [(out / f"{artifact}.{ext}", release / f"{prefix}{platform}{suffix}.{ext}")
+         for ext, platform in [("ipa", ""), ("dmg", "-Mac")]
          if (out / f"{artifact}.{ext}").is_file()]
 if not files:
     sys.exit("no IPA or DMG to package")

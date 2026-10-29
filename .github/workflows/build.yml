@@ -152,17 +152,43 @@ jobs:
           done
           ls -lh release
 
-      - name: Keep the build (not published)
-        # A build-only run publishes nothing, so its downloads are kept with the run instead
-        # (the run's page > Artifacts), for a week.
+      # A build-only run publishes nothing, so its downloads are kept with the run instead (the
+      # run's page > Artifacts), for a week: each file as it is, an .ipa or a .dmg, not a zip.
+      - name: Keep the iOS download (build only)
         if: github.event.inputs.publish != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ steps.metadata.outputs.prefix }}
-          path: release/*
+          path: release/${{ steps.metadata.outputs.prefix }}.ipa
+          archive: false
           retention-days: 7
-          compression-level: 0
-          if-no-files-found: error
+          if-no-files-found: ignore
+
+      - name: Keep the iOS full download (build only)
+        if: github.event.inputs.publish != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          path: release/${{ steps.metadata.outputs.prefix }}-Full.ipa
+          archive: false
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Keep the Mac download (build only)
+        if: github.event.inputs.publish != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          path: release/${{ steps.metadata.outputs.prefix }}-Mac.dmg
+          archive: false
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Keep the Mac full download (build only)
+        if: github.event.inputs.publish != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          path: release/${{ steps.metadata.outputs.prefix }}-Mac-Full.dmg
+          archive: false
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Release notes
         if: github.event.inputs.publish == 'true'
@@ -196,7 +222,7 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
-          python3 scripts/update-altstore-source.py "release/$PREFIX-iOS.ipa" --tag "$TAG" \
+          python3 scripts/update-altstore-source.py "release/$PREFIX.ipa" --tag "$TAG" \
             --changelog "$(python3 scripts/release-notes.py --whats-new --version "$VERSION" --format text)"
           python3 scripts/update-altstore-source.py --check
           git config user.name "github-actions[bot]"

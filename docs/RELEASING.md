@@ -31,7 +31,7 @@ remains the fallback for a build without a profile.
 repository keeps the APK as an asset of a **draft** release named "Build inputs (never publish)"
 (tag `build-inputs`, which a draft does not create). A draft is visible only to people with write
 access to the repository, and to the workflow's own token, so nothing is published. The workflow
-downloads `PvZ2-AltVerZ-1.8.3f.apk` from it when `apk_url` is empty (failing that, the same name
+downloads `PvZ2-AltVerZ-modded-1.8.3f.apk` from it when `apk_url` is empty (failing that, the same name
 in any draft, then any `.apk` in a draft; `build.sh` refuses a different build). For a new game version, attach
 its APK to that draft (Releases > the draft > Edit). **Never publish it.** A fork has no such draft:
 it passes a link.
@@ -45,13 +45,13 @@ release is marked as a prerelease while the port is young.
 A release of both platforms and variants holds:
 
 ```text
-PvZ2-AltVerZ-<game>-Darwin-<version>-iOS.ipa
-PvZ2-AltVerZ-<game>-Darwin-<version>-iOS-Full.ipa
-PvZ2-AltVerZ-<game>-Darwin-<version>-Mac.dmg
-PvZ2-AltVerZ-<game>-Darwin-<version>-Mac-Full.dmg
+PvZ2-AltVerZ-modded-<game>-Darwin-<version>.ipa
+PvZ2-AltVerZ-modded-<game>-Darwin-<version>-Full.ipa
+PvZ2-AltVerZ-modded-<game>-Darwin-<version>-Mac.dmg
+PvZ2-AltVerZ-modded-<game>-Darwin-<version>-Mac-Full.dmg
 ```
 
-For example: `PvZ2-AltVerZ-1.8.3f-Darwin-0.1.0-iOS.ipa`. Slim is a small download; the app
+For example: `PvZ2-AltVerZ-modded-1.8.3f-Darwin-0.1.0.ipa`. Slim is a small download; the app
 downloads the game's data (about 1.1 GB) on first launch. Full has the data inside, for an offline
 first launch. Selecting one platform or variant publishes just those files.
 

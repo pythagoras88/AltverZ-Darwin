@@ -58,7 +58,7 @@ and addresses are in [docs/GAME-NOTES.md](docs/GAME-NOTES.md#the-cheats).
   checks that it is the exact supported version). Left empty, the workflow looks for an `.apk`
   attached to a *draft* release of this repository, which only you can see.
 * **What to build / downloads:** e.g. iPhone/iPad and Slim.
-* **Publish:** turn it **off** for a private test build. The `.ipa` is then kept on the run's page under **Artifacts** for 7 days (unzip the download).
+* **Publish:** turn it **off** for a private test build. The `.ipa` is then kept on the run's page under **Artifacts** for 7 days (`PvZ2-AltVerZ-modded-<game>-Darwin-<version>.ipa`, not zipped).
 * **Runner:** `macos-26` by default. If the job sits in the queue (GitHub sometimes has no Apple
   silicon Mac free), pick `macos-15-intel`, which builds the iPhone/iPad app.
 
@@ -107,10 +107,10 @@ platform:
 
 | File | What it is |
 |---|---|
-| `PvZ2-AltVerZ-<game>-Darwin-<version>-iOS.ipa` | iPhone and iPad, slim (about 50 MB) |
-| `PvZ2-AltVerZ-<game>-Darwin-<version>-iOS-Full.ipa` | iPhone and iPad, with the game's data inside (about 1.1 GB) |
-| `PvZ2-AltVerZ-<game>-Darwin-<version>-Mac.dmg` | Mac, slim (about 55 MB) |
-| `PvZ2-AltVerZ-<game>-Darwin-<version>-Mac-Full.dmg` | Mac, with the game's data inside |
+| `PvZ2-AltVerZ-modded-<game>-Darwin-<version>.ipa` | iPhone and iPad, slim (about 50 MB) |
+| `PvZ2-AltVerZ-modded-<game>-Darwin-<version>-Full.ipa` | iPhone and iPad, with the game's data inside (about 1.1 GB) |
+| `PvZ2-AltVerZ-modded-<game>-Darwin-<version>-Mac.dmg` | Mac, slim (about 55 MB) |
+| `PvZ2-AltVerZ-modded-<game>-Darwin-<version>-Mac-Full.dmg` | Mac, with the game's data inside |
 
 A slim app downloads the game's data (about 1.1 GB) the first time it opens and checks it, so keep
 it open on Wi-Fi until the game starts.
