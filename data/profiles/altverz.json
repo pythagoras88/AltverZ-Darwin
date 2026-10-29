@@ -2,6 +2,7 @@
   "id": "altverz",
   "game_data": "data/game-1.8.3f.json",
   "hooks": "data/hooks-snowie-1.8.3f.json",
+  "driver_hook_sites": ["0x75a96c", "0x9c8fdc"],
   "app_name": "PvZ2 AltVerZ",
   "artifact_name": "PvZ2-AltVerZ",
   "bundle_id": "io.github.oenderg.altverz-darwin",

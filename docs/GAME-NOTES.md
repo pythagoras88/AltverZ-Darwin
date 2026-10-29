@@ -63,6 +63,41 @@ through a guard that turns a fault into a log line instead of a crash.
   and no modal is up. Never write the game's sun, currency or object state directly: call the game's
   own functions and let it do its bookkeeping.
 
+## The cheats
+
+Both are the player's own switches, off by default, and both go through the game's own code
+(neither writes a counter). The fields come from the board's own property registration
+(`0xa97968`; each entry is a name, a type and size, and the field's offset, and `m_boardState`
+at `+0xe0` is the check that it is the board's).
+
+| Address / offset | What it is | Used for |
+|---|---|---|
+| board +0x140 (1 byte), +0x2e6 (1 byte) | `m_plantfoodCount` and `m_plantfoodCountMax` | the refill's check |
+| 0xaa390c | the board's plant food setter: clamps to [0, max], stores, tells the counter | the refill, with the max |
+| 0xc34f90, 0xc352e0, 0xc35590 | the plant food cursor's three uses: the setter with count - 1 | (why the refill is the setter) |
+| 0xa9c794 | a collected plant food: `min(max, count + 1)` | (not used) |
+| board +0x184 | `m_sunCurrency` | (not written) |
+| 0xaa4070 | `Board::AddSun(board, amount)`: `min(level max, sun + amount)`, then tells the counter | (not hooked) |
+| 0x75a96c | a collected sun's value (`CollectableSun`) | the sun multiplier's hook |
+| 0xa9d838 | the board's collect award: per class (`0x75a52c` sun, `0x9c8eb4` coin, ...), its value, then AddSun or the wallet's listeners | (where the values go) |
+| 0x9c8fdc | a collected coin's value (`CollectableCoin`: silver, gold, diamond) | the coin multiplier's hook |
+
+- **Unlimited plant food** is the setter with the max, from the frame loop every 10 frames, in
+  PlayingLevel only and only when the count is below the max. A level without plant food has a
+  max of 0 and is left alone.
+- **The sun multiplier** hooks `0x75a96c`. Its callers are the collect award (`0xa9d888`, which
+  passes the value to AddSun), the board's "sun still in flight" (`0xaa3760` in `0xaa35e4`, which
+  AddSun's cap also reads) and the sun statistics, so scaling the value at its source keeps them
+  all agreeing. AddSun itself also takes level-start sun, rewards and 0-amount refreshes, which a
+  multiplier there would scale too. The site is not one of the mod's: it is the profile's
+  `driver_hook_sites`, baked with `--hook-site` beside the mod's table, and the driver fills its
+  slot with the shim's `A64HookFunction` after the mod's hooks are in. Its first instruction is
+  `sub sp, sp, #0x40`, which the trampoline copies as it is.
+- **The coin multiplier** hooks `0x9c8fdc` the same way. Its callers are the award (`0xa9d8bc`, which
+  hands the value to the wallet's listeners), the click that starts the flight (`0xa9cac8`) and the
+  level statistics. Fake coins (`0x9c92c8`) have their own value function and are not hooked; neither
+  are level rewards. It also starts with `sub sp, sp, #0x40`.
+
 ## Test hooks (test builds only)
 
 The driver's `TL_PVZ2_STATE`, `TL_PVZ2_PRESS` and `TL_PVZ2_GOTO` switches (TESTING.md) read the UI
