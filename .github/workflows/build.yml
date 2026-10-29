@@ -29,13 +29,18 @@ on:
         description: "Release tag (leave empty: v<VERSION>)"
         required: false
         default: ""
+      runner:
+        description: "The Mac that builds (another one when GitHub's arm64 Macs are queued; the Intel one builds iPhone/iPad only)"
+        type: choice
+        options: [macos-26, macos-15, macos-15-intel]
+        default: macos-26
 
 permissions:
   contents: write
 
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: ${{ github.event.inputs.runner || 'macos-26' }}
     timeout-minutes: 150
     env:
       PROFILE: altverz
