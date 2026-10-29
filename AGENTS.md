@@ -57,7 +57,8 @@ You need the game's APK (the user's own file; never commit it, or the OBB, or an
 
 - **Never commit game files** (APK, OBB, `.so`, extracted assets, saves) or personal data
   (paths under your home folder, device IDs, signing identities).
-- **Never change the app IDs** (`io.github.oenderg.altverz-darwin` for AltVerZ,
+- **Never change the app IDs** (`io.github.pythagoras88.altverz-modded` for AltVerZ in this fork,
+  which installs beside upstream's `io.github.oenderg.altverz-darwin` on purpose, and
   `io.github.oenderg.reflourished-darwin` for the comparison profile): players' saves and
   settings hang off them.
 - **Never change `sparkle/public-key`**: installed Mac apps accept only updates signed with its

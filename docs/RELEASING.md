@@ -96,8 +96,8 @@ signs the slim Mac DMG and commits the AltVerZ Mac update feed `sparkle/appcast.
 
 - **iPhone/iPad**: the IPA is ad-hoc signed. Every sideloader (AltStore, SideStore, Sideloadly,
   LiveContainer) re-signs it with the installing person's own Apple ID, so updates keep their data
-  as long as the app ID (`io.github.oenderg.altverz-darwin`) stays the same.
-- **Mac**: the same app ID, `io.github.oenderg.altverz-darwin`. Saves stay in the same data folder
+  as long as the app ID (`io.github.pythagoras88.altverz-modded`) stays the same.
+- **Mac**: the same app ID, `io.github.pythagoras88.altverz-modded`. Saves stay in the same data folder
   across updates. `BUNDLE_ID` overrides the ID on either platform for test or device builds.
 - **Mac**: the app is ad-hoc signed and not notarized, so macOS refuses the first open; the player
   clicks Open Anyway in System Settings > Privacy & Security (right-click > Open no longer does it).

@@ -276,12 +276,12 @@ cat > "$APP/Settings.bundle/Root.plist" <<'PLIST'
             <key>DefaultValue</key><integer>1</integer>
             <key>Titles</key>
             <array>
-                <string>Off</string><string>x2</string><string>x3</string>
+                <string>Off</string><string>x2</string><string>x3</string><string>x4</string>
                 <string>x5</string><string>x10</string><string>x20</string>
             </array>
             <key>Values</key>
             <array>
-                <integer>1</integer><integer>2</integer><integer>3</integer>
+                <integer>1</integer><integer>2</integer><integer>3</integer><integer>4</integer>
                 <integer>5</integer><integer>10</integer><integer>20</integer>
             </array>
         </dict>

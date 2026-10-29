@@ -378,7 +378,7 @@ private struct GeneralPane: View {
                               reset: { sunMultiplier = 1 }) {
                     Picker("", selection: $sunMultiplier) {
                         Text("Off").tag(1)
-                        ForEach([2, 3, 5, 10, 20], id: \.self) { Text("×\($0)").tag($0) }
+                        ForEach([2, 3, 4, 5, 10, 20], id: \.self) { Text("×\($0)").tag($0) }
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
