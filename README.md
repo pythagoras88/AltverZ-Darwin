@@ -27,6 +27,44 @@ and the mod's own content built in.
 
 ---
 
+## This fork: cheats
+
+This fork of [oenderg/AltverZ-Darwin](https://github.com/oenderg/AltverZ-Darwin) adds cheats to
+PvZ2 AltVerZ 1.8.3f. The download and release links above are the original project's; this fork's own
+builds come from its **Actions** tab (see below). Everything else works the same as upstream.
+
+| Cheat | What it does |
+|---|---|
+| **Unlimited plant food** | The counter fills back up a moment after you use one, in every level that has plant food. |
+| **Sun multiplier** (×2 to ×20) | Every sun you collect is worth more: ×10 makes a 25 sun worth 250. The level's own sun limit still applies. |
+| **Coin multiplier** (×2 to ×10) | Every silver, gold and diamond coin you collect on the lawn is worth more. Fake coins and level rewards are not changed. |
+
+All of them are **off until you turn them on**, and a change applies while you play:
+
+* **iPhone and iPad:** the iOS **Settings** app > **PvZ2 AltVerZ** (the page appears after the
+  app's first launch). A change takes effect when you switch back to the game.
+* **Mac:** Settings (`Cmd-,`) > General > Cheats.
+
+They work through the game's own code: plant food is refilled with the game's own setter, and the
+multipliers scale a collected item's value where the game reads it, so the counters, the sun cap
+and the collection animation all agree. Nothing is written into your save directly. The details
+and addresses are in [docs/GAME-NOTES.md](docs/GAME-NOTES.md#the-cheats).
+
+### Building this fork
+
+**Actions > Build > Run workflow**, on `main`:
+
+* **APK link:** a direct, Google Drive or MEGA link to your own copy of the game's APK (the build
+  checks that it is the exact supported version). Left empty, the workflow looks for an `.apk`
+  attached to a *draft* release of this repository, which only you can see.
+* **What to build / downloads:** e.g. iPhone/iPad and Slim.
+* **Publish:** turn it **off** for a private test build. The `.ipa` is then kept on the run's page under **Artifacts** for 7 days (unzip the download).
+* **Runner:** `macos-26` by default. If the job sits in the queue (GitHub sometimes has no Apple
+  silicon Mac free), pick `macos-15-intel`, which builds the iPhone/iPad app.
+
+Install the `.ipa` with AltStore or SideStore. The first launch of a Slim build downloads the game's
+data.
+
 > **Early build, expect bugs.**
 
 ## Features
