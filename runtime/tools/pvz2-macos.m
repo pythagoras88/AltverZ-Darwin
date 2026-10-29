@@ -140,6 +140,26 @@ static bool confirm_quit(void)
     id v = [[NSUserDefaults standardUserDefaults] objectForKey:kConfirmQuit];
     return v ? [v boolValue] : true;
 }
+/* The cheats (the settings window's General pane), both off by default: read at
+ * start and again whenever the defaults change, so a change acts at once. The
+ * environment wins, for the tests. Only a change is passed on (the defaults also
+ * change when the window moves). */
+static NSString *const kUnlimitedPlantFood = @"unlimitedPlantFood";
+static NSString *const kSunMultiplier = @"sunMultiplier";
+static void apply_cheats(void)
+{
+    static int was_food = -1, was_sun = -1;
+    NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+    const char *food_env = getenv("TL_PVZ2_UNLIMITED_PLANT_FOOD");
+    const char *sun_env = getenv("TL_PVZ2_SUN_MULTIPLIER");
+    int food = (food_env && *food_env) ? food_env[0] == '1' : [d boolForKey:kUnlimitedPlantFood];
+    int sun = (sun_env && *sun_env) ? atoi(sun_env) : (int)[d integerForKey:kSunMultiplier];
+    if (sun < 1) sun = 1;
+    if (food != was_food) tl_pvz2_set_unlimited_plant_food(food);
+    if (sun != was_sun) tl_pvz2_set_sun_multiplier(sun);
+    was_food = food;
+    was_sun = sun;
+}
 /* The scale the game draws at: the display's own -- or, with "Sharper on
  * standard displays" on, twice that on a display that is not Retina (drawn
  * large and scaled down, the way macOS's own scaled modes do it). */
@@ -2640,6 +2660,7 @@ static void start_updater(void)
                                                       usingBlock:^(NSNotification *note) {
             (void)note;
             [g_view followDisplayScale];
+            apply_cheats();
             /* the settings window's "Check for updates automatically" */
             id checks = [[NSUserDefaults standardUserDefaults] objectForKey:@"SUEnableAutomaticChecks"];
             if (g_updater && checks && [checks boolValue] != g_updater.updater.automaticallyChecksForUpdates)
@@ -2851,6 +2872,8 @@ static void start_updater(void)
     tl_pvz2_set_native_shovel(native_shovel_mode());
     /* The native seed pick: the game's own press. */
     tl_pvz2_set_seed_pick(native_seed_pick_mode());
+    /* The cheats, as the settings window left them. */
+    apply_cheats();
 
     /* The guest's own memory warning. The game's Java has no memory callback
      * at all, so the host is the activity: the host is told about the memory

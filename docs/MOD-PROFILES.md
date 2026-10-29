@@ -12,6 +12,7 @@ the Java contract, the driver's game addresses. What differs is the mod profile.
 | Field | What it decides |
 |---|---|
 | `game_data`, `hooks` | the pinned game build and the mod's baked hook table |
+| `driver_hook_sites` | the driver's own hook sites, baked beside the mod's (the sun multiplier's `0x75a96c`; AltVerZ only) |
 | `app_name`, `artifact_name`, `bundle_id`, `data_folder`, `app_version` | the app the user installs and the folder its saves live in |
 | `package_name`, `android_version_code/name` | what the guest is told it runs on |
 | `mod_library`, `mod_jni_onload` | `libRFLib.so` (no `JNI_OnLoad`) or `libSnowie.so` (has one) |

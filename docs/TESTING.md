@@ -30,6 +30,7 @@ What it sets (you can set these yourself when running the binary by hand):
 | `TL_PVZ2_MAIN_TAR` | override the writable CDN cache path; skips bundle staging (use a test copy) |
 | `TL_PVZ2_FRAMES`, `TL_PVZ2_FRAME_EVERY` | save only this app's rendered frame as `latest.bmp` in an existing directory, every N frames; works with the lid closed |
 | `TL_PVZ2_LOG` | where the log goes |
+| `TL_PVZ2_UNLIMITED_PLANT_FOOD=1`, `TL_PVZ2_SUN_MULTIPLIER=<n>` | the cheats, over the app's own settings; the log says `pvz2: unlimited plant food: refilled 2 -> 3` after a use and `pvz2: the sun multiplier: hooked the sun's value` at start (a build converted before the hook site was added says the multiplier does nothing: convert again, without `--quick`) |
 | `TL_PVZ2_IMPORT_FROM=<domain>` | import settings once from this domain; background tests otherwise skip import. Use a test bundle ID and test domains only. |
 | `TL_PVZ2_TAP`, `TL_PVZ2_TAP_DELAY` | the tap script, and the seconds before it starts (default 3) |
 | `TL_PVZ2_STATE` | write the current screen, modal and every clickable widget as one JSON line to this file, on change (test builds only) |

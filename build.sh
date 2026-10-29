@@ -162,7 +162,8 @@ if [ "$WANT_IOS" = 1 ] || [ "$WANT_IOS_SIM" = 1 ]; then
         step "the game's code for iOS: reused from the last build"
     else
         step "converting the game's code for iOS"
-        HOOKS="$HOOKS" bash "$ROOT/converter/build-ios-dylibs.sh" "$LIBS" "$WORK/ios-dylibs"
+        HOOKS="$HOOKS" DRIVER_HOOK_SITES="$PROFILE_DRIVER_HOOK_SITES" \
+            bash "$ROOT/converter/build-ios-dylibs.sh" "$LIBS" "$WORK/ios-dylibs"
         python3 "$ROOT/converter/check-build.py" "$WORK/ios-dylibs"
     fi
 
@@ -199,7 +200,7 @@ if [ "$WANT_MAC" = 1 ]; then
         step "the game's code for the Mac: reused from the last build"
     else
         step "converting the game's code for the Mac"
-        HOOKS="$HOOKS" GLES="$ANGLE_MAC/libGLESv2.dylib" \
+        HOOKS="$HOOKS" DRIVER_HOOK_SITES="$PROFILE_DRIVER_HOOK_SITES" GLES="$ANGLE_MAC/libGLESv2.dylib" \
             bash "$ROOT/converter/build-macos-dylibs.sh" "$LIBS" "$WORK/macos-dylibs"
     fi
 

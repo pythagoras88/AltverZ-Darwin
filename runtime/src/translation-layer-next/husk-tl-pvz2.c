@@ -28,6 +28,7 @@
 #include "husk-tl-cdn.h"
 #include "pvz2-profile.h"
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -2517,6 +2518,7 @@ static void *raise_on_a_host_thread(void *arg)
 }
 
 static void *gl_main(void *arg);
+static void cheats_install_hooks(void);
 
 bool tl_pvz2_start(const tl_ga_config *cfg)
 {
@@ -2690,6 +2692,9 @@ bool tl_pvz2_start(const tl_ga_config *cfg)
 #endif
         }
     }
+    /* The player's own switches that need a hook, after the mod's, so that the
+     * mod has had every one of its sites first (none of ours is one of them). */
+    cheats_install_hooks();
     if (getenv("TL_PVZ2_PROBE")) {
         tl_ld_probe(game, 0x166bf4c, probe_changed);
         tl_ld_probe(game, 0x166e59c, probe_changed_lambda);
@@ -3282,6 +3287,104 @@ static void guest_collect_sun(void)
     tl_log_line("pvz2: the collect shortcut: sun before=%d; requested %d sun(s), value=%d, %d coin(s), %d gem(s), %d plant food, %d sprout(s), scanned=%d%s",
                 sun_before, suns, value, coins, gems, plantfood, sprouts, seen,
                 ok && destroy_ok && seen < 4096 ? " (the native flight awards on arrival)" : " (stopped: native state unavailable)");
+}
+
+/* ---- the cheats: unlimited plant food and the sun multiplier --------------
+ *
+ * The player's own switches, both off by default. They are the one place the
+ * driver changes the game's numbers, so each one goes through the game's own
+ * code and lets it do its bookkeeping (the counter's redraw, the cap, the
+ * sun in flight); neither writes a counter itself.
+ *
+ * Plant food. Board::m_plantfoodCount is one byte at board+0x140 and
+ * m_plantfoodCountMax one byte at board+0x2e6 (the board's own property
+ * registration, guest 0xa97f38 and 0xa97fa0, names both). The game's setter,
+ * 0xaa390c(board, count), clamps to [0, max], stores the count and tells the
+ * counter. Using plant food is that setter with count - 1 (the cursor's three
+ * use paths, 0xc34f90, 0xc352e0 and 0xc35590), so the refill is the same call
+ * with the max, the frame after. A level without plant food has a max of 0
+ * and is left as it is.
+ *
+ * Sun. A collected sun is worth CollectableSun's value, 0x75a96c(sun); the
+ * collect award (0xa9d888) passes it to Board::AddSun (0xaa4070), and the
+ * board's "sun still in flight" (0xaa35e4, via 0xaa3760) counts the same
+ * value. Scaling the value at its source keeps the award, the in-flight count
+ * and AddSun's own cap at the level's maximum consistent. It needs a hook, so
+ * the site is baked into the converted library (the profile's
+ * driver_hook_sites); a build without it logs that the multiplier does nothing. */
+#define GUEST_SET_PLANT_FOOD       0xaa390c
+#define GUEST_BOARD_PLANT_FOOD     0x140
+#define GUEST_BOARD_PLANT_FOOD_MAX 0x2e6
+#define PVZ2_SUN_MULTIPLIER_MAX    100
+
+static atomic_int g_unlimited_plant_food;
+static atomic_int g_sun_multiplier = 1;
+static int (*g_sun_value_original)(void *sun);
+
+void tl_pvz2_set_unlimited_plant_food(int on)
+{
+    atomic_store(&g_unlimited_plant_food, on ? 1 : 0);
+    tl_log_line("pvz2: unlimited plant food is %s", on ? "on" : "off");
+}
+
+void tl_pvz2_set_sun_multiplier(int times)
+{
+    if (times < 1) times = 1;
+    if (times > PVZ2_SUN_MULTIPLIER_MAX) times = PVZ2_SUN_MULTIPLIER_MAX;
+    atomic_store(&g_sun_multiplier, times);
+    tl_log_line("pvz2: the sun multiplier is x%d%s", times,
+                times > 1 && !g_sun_value_original ? " (not hooked yet)" : "");
+}
+
+/* The replacement for 0x75a96c. The game calls it from its own code, on its
+ * own thread, so the original is called directly, the way the mod's own
+ * replacements call theirs. */
+static int cheat_sun_value(void *sun)
+{
+    int value = g_sun_value_original(sun);
+    int times = atomic_load_explicit(&g_sun_multiplier, memory_order_relaxed);
+    if (times > 1 && value > 0 && value <= INT32_MAX / times) value *= times;
+    return value;
+}
+
+static void cheats_install_hooks(void)
+{
+    /* Only a converted library has baked sites; the shim's A64HookFunction is
+     * what fills one, the same function the mod's hooks go through. */
+    int (*hook)(void *, void *, void **) =
+        tl_aot_ready() ? (int (*)(void *, void *, void **))dlsym(RTLD_DEFAULT, "A64HookFunction") : NULL;
+    void *site = guest_code(GUEST_SUN_VALUE);
+    void *original = NULL;
+    if (!hook || !site || hook(site, (void *)cheat_sun_value, &original) != 0 ||
+        !original || original == site) {
+        /* An unbaked site comes back as itself: the request was not applied. */
+        tl_log_line("pvz2: the sun multiplier: the sun's value (guest %#x) is not a baked "
+                    "hook site in this build; the multiplier does nothing", GUEST_SUN_VALUE);
+        return;
+    }
+    g_sun_value_original = (int (*)(void *))original;
+    tl_log_line("pvz2: the sun multiplier: hooked the sun's value (guest %#x), x%d",
+                GUEST_SUN_VALUE, atomic_load(&g_sun_multiplier));
+}
+
+/* The refill, on the game's own thread after a frame. Only in PlayingLevel:
+ * the level's own start sets its count before then. */
+static void guest_refill_plant_food(void)
+{
+    if (!atomic_load(&g_unlimited_plant_food)) return;
+    bool ok = false;
+    uint64_t board = guest_call2(guest_code(GUEST_BOARD_GETTER), 0, 0, &ok);
+    int32_t state = -1;
+    uint8_t count = 0, max = 0;
+    if (!ok || !board ||
+        !guest_read_bytes(board + 0xe0, &state, sizeof state) || state != 5 ||
+        !guest_read_bytes(board + GUEST_BOARD_PLANT_FOOD, &count, sizeof count) ||
+        !guest_read_bytes(board + GUEST_BOARD_PLANT_FOOD_MAX, &max, sizeof max) ||
+        count >= max)
+        return;
+    guest_call2(guest_code(GUEST_SET_PLANT_FOOD), board, max, &ok);
+    tl_log_line("pvz2: unlimited plant food: %s %d -> %d", ok ? "refilled" : "could not refill",
+                (int)count, (int)max);
 }
 
 /* ---- fast-forward, plant food and power-ups -----------------------------
@@ -5744,6 +5847,8 @@ static void *gl_main(void *arg)
             guest_seed_pick(atomic_load(&g_seed_pick_slot));
         if (atomic_exchange(&g_collect_sun_pending, 0)) guest_collect_sun();
         if (atomic_exchange(&g_fast_forward_pending, 0)) guest_fast_forward();
+        /* Unlimited plant food: a used one is back a few frames later. */
+        if ((tl_pvz2_frames() % 10) == 0) guest_refill_plant_food();
         /* The plant food and power-up presses are taps: the down now, the up
          * a frame later, as a finger does. */
         if (g_plant_food_touch_down) {

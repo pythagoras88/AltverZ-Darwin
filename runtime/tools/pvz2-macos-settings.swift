@@ -3,7 +3,8 @@
 // UserDefaults under the keys the host reads (pvz2-macos.m), and the host
 // watches them, so a change acts at once -- there is no "save".
 //
-//   General   the window: Fixed (one shape) or Adapt, the shape, and what closing it does
+//   General   the window: Fixed (one shape) or Adapt, the shape, what closing it does,
+//             and the cheats (unlimited plant food, the sun multiplier)
 //   Keyboard  the key for each seed packet, the shovel, collecting, fast-forward,
 //             plant food and the power-ups (click a field, press a key)
 //   About     the version, updates, and where the saves and the log are
@@ -36,6 +37,8 @@ private enum Key {
     static let closeAction = "closeAction"
     static let confirmQuit = "confirmQuit"
     static let renderSharp = "renderSharp"
+    static let unlimitedPlantFood = "unlimitedPlantFood"
+    static let sunMultiplier = "sunMultiplier"
     /// Sparkle's own key; the host hands a change to the updater
     static let automaticChecks = "SUEnableAutomaticChecks"
 }
@@ -277,6 +280,8 @@ private struct GeneralPane: View {
     @AppStorage(Key.closeAction) private var closeAction = "quit"
     @AppStorage(Key.confirmQuit) private var confirmQuit = true
     @AppStorage(Key.renderSharp) private var renderSharp = false
+    @AppStorage(Key.unlimitedPlantFood) private var unlimitedPlantFood = false
+    @AppStorage(Key.sunMultiplier) private var sunMultiplier = 1
 
     /// "Letterbox" is the old name of the fixed mode.
     private var mode: Binding<String> {
@@ -357,6 +362,30 @@ private struct GeneralPane: View {
                 }
             } footer: {
                 Text("The game draws at the sharpness of the display its window is on, and follows the window to another display. “Sharper on standard displays” draws at twice the size on a display that isn't Retina and scales it down: smoother edges, more work for the graphics card. With the game's “Target 60 FPS” on, the game runs at the refresh rate of the display its window is on (120 Hz, 175 Hz…); off, at 60.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Section {
+                ResettableRow(title: "Unlimited plant food", isDefault: !unlimitedPlantFood,
+                              reset: { unlimitedPlantFood = false }) {
+                    Toggle("", isOn: $unlimitedPlantFood)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+                ResettableRow(title: "Sun multiplier", isDefault: sunMultiplier == 1,
+                              reset: { sunMultiplier = 1 }) {
+                    Picker("", selection: $sunMultiplier) {
+                        Text("Off").tag(1)
+                        ForEach([2, 3, 5, 10, 20], id: \.self) { Text("×\($0)").tag($0) }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .fixedSize()
+                }
+            } header: {
+                Text("Cheats")
+            } footer: {
+                Text("Unlimited plant food fills the counter back up a moment after you use one, in every level that has plant food. The sun multiplier makes every sun you collect worth more (×10: a sun is 250 instead of 25), up to the level's own limit. Both act at once.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
