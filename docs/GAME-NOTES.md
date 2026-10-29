@@ -79,6 +79,8 @@ at `+0xe0` is the check that it is the board's).
 | board +0x184 | `m_sunCurrency` | (not written) |
 | 0xaa4070 | `Board::AddSun(board, amount)`: `min(level max, sun + amount)`, then tells the counter | (not hooked) |
 | 0x75a96c | a collected sun's value (`CollectableSun`) | the sun multiplier's hook |
+| 0xa9d838 | the board's collect award: per class (`0x75a52c` sun, `0x9c8eb4` coin, ...), its value, then AddSun or the wallet's listeners | (where the values go) |
+| 0x9c8fdc | a collected coin's value (`CollectableCoin`: silver, gold, diamond) | the coin multiplier's hook |
 
 - **Unlimited plant food** is the setter with the max, from the frame loop every 10 frames, in
   PlayingLevel only and only when the count is below the max. A level without plant food has a
@@ -91,6 +93,10 @@ at `+0xe0` is the check that it is the board's).
   `driver_hook_sites`, baked with `--hook-site` beside the mod's table, and the driver fills its
   slot with the shim's `A64HookFunction` after the mod's hooks are in. Its first instruction is
   `sub sp, sp, #0x40`, which the trampoline copies as it is.
+- **The coin multiplier** hooks `0x9c8fdc` the same way. Its callers are the award (`0xa9d8bc`, which
+  hands the value to the wallet's listeners), the click that starts the flight (`0xa9cac8`) and the
+  level statistics. Fake coins (`0x9c92c8`) have their own value function and are not hooked; neither
+  are level rewards. It also starts with `sub sp, sp, #0x40`.
 
 ## Test hooks (test builds only)
 

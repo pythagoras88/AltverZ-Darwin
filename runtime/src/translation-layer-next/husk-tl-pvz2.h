@@ -187,13 +187,15 @@ void tl_pvz2_request_native_shovel(void);
 void tl_pvz2_set_low_memory_warning(int on);
 void tl_pvz2_request_low_memory(void);
 
-/* The player's cheats, both off by default and safe to change at any time.
+/* The player's cheats, all off by default and safe to change at any time.
  * Unlimited plant food refills the board's counter to its max through the
- * game's own setter (guest 0xaa390c) after one is used. The sun multiplier
- * (1 is off, at most 100) scales every collected sun's value at the game's
- * own value function (guest 0x75a96c, a baked hook site). */
+ * game's own setter (guest 0xaa390c) after one is used. The multipliers (1 is
+ * off, at most 100) scale every collected sun's and coin's (silver, gold and
+ * diamond) value at the game's own value functions (guest 0x75a96c and
+ * 0x9c8fdc, baked hook sites). */
 void tl_pvz2_set_unlimited_plant_food(int on);
 void tl_pvz2_set_sun_multiplier(int times);
+void tl_pvz2_set_coin_multiplier(int times);
 
 /* The guest's own UI geometry, in the surface's space: the seed tray's rect and
  * the shovel button's rect, each x, y, w, h.

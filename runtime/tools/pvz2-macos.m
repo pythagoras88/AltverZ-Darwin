@@ -148,17 +148,22 @@ static NSString *const kUnlimitedPlantFood = @"unlimitedPlantFood";
 static NSString *const kSunMultiplier = @"sunMultiplier";
 static void apply_cheats(void)
 {
-    static int was_food = -1, was_sun = -1;
+    static int was_food = -1, was_sun = -1, was_coin = -1;
     NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
     const char *food_env = getenv("TL_PVZ2_UNLIMITED_PLANT_FOOD");
     const char *sun_env = getenv("TL_PVZ2_SUN_MULTIPLIER");
+    const char *coin_env = getenv("TL_PVZ2_COIN_MULTIPLIER");
     int food = (food_env && *food_env) ? food_env[0] == '1' : [d boolForKey:kUnlimitedPlantFood];
     int sun = (sun_env && *sun_env) ? atoi(sun_env) : (int)[d integerForKey:kSunMultiplier];
+    int coin = (coin_env && *coin_env) ? atoi(coin_env) : (int)[d integerForKey:@"coinMultiplier"];
     if (sun < 1) sun = 1;
+    if (coin < 1) coin = 1;
     if (food != was_food) tl_pvz2_set_unlimited_plant_food(food);
     if (sun != was_sun) tl_pvz2_set_sun_multiplier(sun);
+    if (coin != was_coin) tl_pvz2_set_coin_multiplier(coin);
     was_food = food;
     was_sun = sun;
+    was_coin = coin;
 }
 /* The scale the game draws at: the display's own -- or, with "Sharper on
  * standard displays" on, twice that on a display that is not Retina (drawn

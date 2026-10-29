@@ -47,8 +47,8 @@ and the mod's own content built in.
   * On the Mac, Settings (`Cmd-,`) lets you pick any keys.
 * **Cheats** (off unless you turn them on)
   * **Unlimited plant food**: the counter fills back up a moment after you use one.
-  * **Sun multiplier**: every sun you collect is worth ×2 to ×20 (×10: 250 instead of 25),
-    up to the level's own limit.
+  * **Sun and coin multipliers**: every sun and coin (silver, gold and diamond) you collect on
+    the lawn is worth more (sun ×10: 250 instead of 25), up to the game's own limits.
   * On the Mac they are in Settings (`Cmd-,`) > General; on iPhone and iPad in the Settings app,
     under the game's name.
 * **Mac window**

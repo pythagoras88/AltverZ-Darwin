@@ -4,7 +4,7 @@
 // watches them, so a change acts at once -- there is no "save".
 //
 //   General   the window: Fixed (one shape) or Adapt, the shape, what closing it does,
-//             and the cheats (unlimited plant food, the sun multiplier)
+//             and the cheats (unlimited plant food, the sun and coin multipliers)
 //   Keyboard  the key for each seed packet, the shovel, collecting, fast-forward,
 //             plant food and the power-ups (click a field, press a key)
 //   About     the version, updates, and where the saves and the log are
@@ -39,6 +39,7 @@ private enum Key {
     static let renderSharp = "renderSharp"
     static let unlimitedPlantFood = "unlimitedPlantFood"
     static let sunMultiplier = "sunMultiplier"
+    static let coinMultiplier = "coinMultiplier"
     /// Sparkle's own key; the host hands a change to the updater
     static let automaticChecks = "SUEnableAutomaticChecks"
 }
@@ -282,6 +283,7 @@ private struct GeneralPane: View {
     @AppStorage(Key.renderSharp) private var renderSharp = false
     @AppStorage(Key.unlimitedPlantFood) private var unlimitedPlantFood = false
     @AppStorage(Key.sunMultiplier) private var sunMultiplier = 1
+    @AppStorage(Key.coinMultiplier) private var coinMultiplier = 1
 
     /// "Letterbox" is the old name of the fixed mode.
     private var mode: Binding<String> {
@@ -382,10 +384,20 @@ private struct GeneralPane: View {
                     .labelsHidden()
                     .fixedSize()
                 }
+                ResettableRow(title: "Coin multiplier", isDefault: coinMultiplier == 1,
+                              reset: { coinMultiplier = 1 }) {
+                    Picker("", selection: $coinMultiplier) {
+                        Text("Off").tag(1)
+                        ForEach([2, 3, 5, 10], id: \.self) { Text("×\($0)").tag($0) }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .fixedSize()
+                }
             } header: {
                 Text("Cheats")
             } footer: {
-                Text("Unlimited plant food fills the counter back up a moment after you use one, in every level that has plant food. The sun multiplier makes every sun you collect worth more (×10: a sun is 250 instead of 25), up to the level's own limit. Both act at once.")
+                Text("Unlimited plant food fills the counter back up a moment after you use one, in every level that has plant food. The multipliers make every sun and coin (silver, gold and diamond) you collect on the lawn worth more (sun ×10: 250 instead of 25), up to the game's own limits; level rewards are not changed. All of them act at once.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

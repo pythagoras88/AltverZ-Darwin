@@ -3289,12 +3289,12 @@ static void guest_collect_sun(void)
                 ok && destroy_ok && seen < 4096 ? " (the native flight awards on arrival)" : " (stopped: native state unavailable)");
 }
 
-/* ---- the cheats: unlimited plant food and the sun multiplier --------------
+/* ---- the cheats: unlimited plant food and the sun and coin multipliers ----
  *
- * The player's own switches, both off by default. They are the one place the
+ * The player's own switches, all off by default. They are the one place the
  * driver changes the game's numbers, so each one goes through the game's own
- * code and lets it do its bookkeeping (the counter's redraw, the cap, the
- * sun in flight); neither writes a counter itself.
+ * code and lets it do its bookkeeping (the counter's redraw, the caps, the
+ * value in flight); none writes a counter itself.
  *
  * Plant food. Board::m_plantfoodCount is one byte at board+0x140 and
  * m_plantfoodCountMax one byte at board+0x2e6 (the board's own property
@@ -3305,21 +3305,33 @@ static void guest_collect_sun(void)
  * with the max, the frame after. A level without plant food has a max of 0
  * and is left as it is.
  *
- * Sun. A collected sun is worth CollectableSun's value, 0x75a96c(sun); the
- * collect award (0xa9d888) passes it to Board::AddSun (0xaa4070), and the
- * board's "sun still in flight" (0xaa35e4, via 0xaa3760) counts the same
- * value. Scaling the value at its source keeps the award, the in-flight count
- * and AddSun's own cap at the level's maximum consistent. It needs a hook, so
- * the site is baked into the converted library (the profile's
- * driver_hook_sites); a build without it logs that the multiplier does nothing. */
+ * Sun and coins. The board's collect award (0xa9d838) asks each collected
+ * object's class for its value and hands it on: a sun's (CollectableSun,
+ * 0x75a96c) to Board::AddSun (0xaa4070), a coin's (CollectableCoin,
+ * 0x9c8fdc: silver, gold and diamond coins) to the listeners that keep the
+ * wallet. The click that starts the flight (0xa9cac8), the sun in flight
+ * (0xaa35e4, via 0xaa3760) and the level's statistics read the same
+ * functions, so scaling each value at its source keeps them all agreeing.
+ * Fake coins have a value function of their own (0x9c92c8) and are left
+ * alone. Each needs a hook, so the sites are baked into the converted
+ * library (the profile's driver_hook_sites); a build without one logs that
+ * its multiplier does nothing. */
 #define GUEST_SET_PLANT_FOOD       0xaa390c
 #define GUEST_BOARD_PLANT_FOOD     0x140
 #define GUEST_BOARD_PLANT_FOOD_MAX 0x2e6
-#define PVZ2_SUN_MULTIPLIER_MAX    100
+#define GUEST_COIN_VALUE           0x9c8fdc
+#define PVZ2_CHEAT_MULTIPLIER_MAX  100
 
+typedef struct {
+    const char *what;            /* for the log */
+    uint64_t site;
+    atomic_int times;            /* 1 is off */
+    int (*original)(void *object);
+} cheat_value_hook;
+
+static cheat_value_hook g_cheat_sun  = { "sun",   GUEST_SUN_VALUE,  1, NULL };
+static cheat_value_hook g_cheat_coin = { "coins", GUEST_COIN_VALUE, 1, NULL };
 static atomic_int g_unlimited_plant_food;
-static atomic_int g_sun_multiplier = 1;
-static int (*g_sun_value_original)(void *sun);
 
 void tl_pvz2_set_unlimited_plant_food(int on)
 {
@@ -3327,24 +3339,46 @@ void tl_pvz2_set_unlimited_plant_food(int on)
     tl_log_line("pvz2: unlimited plant food is %s", on ? "on" : "off");
 }
 
-void tl_pvz2_set_sun_multiplier(int times)
+static void cheat_set_multiplier(cheat_value_hook *h, int times)
 {
     if (times < 1) times = 1;
-    if (times > PVZ2_SUN_MULTIPLIER_MAX) times = PVZ2_SUN_MULTIPLIER_MAX;
-    atomic_store(&g_sun_multiplier, times);
-    tl_log_line("pvz2: the sun multiplier is x%d%s", times,
-                times > 1 && !g_sun_value_original ? " (not hooked yet)" : "");
+    if (times > PVZ2_CHEAT_MULTIPLIER_MAX) times = PVZ2_CHEAT_MULTIPLIER_MAX;
+    atomic_store(&h->times, times);
+    tl_log_line("pvz2: the %s multiplier is x%d%s", h->what, times,
+                times > 1 && !h->original ? " (not hooked yet)" : "");
 }
 
-/* The replacement for 0x75a96c. The game calls it from its own code, on its
- * own thread, so the original is called directly, the way the mod's own
+void tl_pvz2_set_sun_multiplier(int times)  { cheat_set_multiplier(&g_cheat_sun, times); }
+void tl_pvz2_set_coin_multiplier(int times) { cheat_set_multiplier(&g_cheat_coin, times); }
+
+/* The replacements. The game calls them from its own code, on its own
+ * thread, so each original is called directly, the way the mod's own
  * replacements call theirs. */
-static int cheat_sun_value(void *sun)
+static int cheat_scaled(cheat_value_hook *h, void *object)
 {
-    int value = g_sun_value_original(sun);
-    int times = atomic_load_explicit(&g_sun_multiplier, memory_order_relaxed);
+    int value = h->original(object);
+    int times = atomic_load_explicit(&h->times, memory_order_relaxed);
     if (times > 1 && value > 0 && value <= INT32_MAX / times) value *= times;
     return value;
+}
+static int cheat_sun_value(void *sun)   { return cheat_scaled(&g_cheat_sun, sun); }
+static int cheat_coin_value(void *coin) { return cheat_scaled(&g_cheat_coin, coin); }
+
+static void cheat_install_one(int (*hook)(void *, void *, void **), cheat_value_hook *h,
+                              int (*replacement)(void *))
+{
+    void *site = guest_code(h->site);
+    void *original = NULL;
+    if (!hook || !site || hook(site, (void *)replacement, &original) != 0 ||
+        !original || original == site) {
+        /* An unbaked site comes back as itself: the request was not applied. */
+        tl_log_line("pvz2: the %s multiplier: guest %#llx is not a baked hook site in this "
+                    "build; the multiplier does nothing", h->what, (unsigned long long)h->site);
+        return;
+    }
+    h->original = (int (*)(void *))original;
+    tl_log_line("pvz2: the %s multiplier: hooked the value function (guest %#llx), x%d",
+                h->what, (unsigned long long)h->site, atomic_load(&h->times));
 }
 
 static void cheats_install_hooks(void)
@@ -3353,18 +3387,8 @@ static void cheats_install_hooks(void)
      * what fills one, the same function the mod's hooks go through. */
     int (*hook)(void *, void *, void **) =
         tl_aot_ready() ? (int (*)(void *, void *, void **))dlsym(RTLD_DEFAULT, "A64HookFunction") : NULL;
-    void *site = guest_code(GUEST_SUN_VALUE);
-    void *original = NULL;
-    if (!hook || !site || hook(site, (void *)cheat_sun_value, &original) != 0 ||
-        !original || original == site) {
-        /* An unbaked site comes back as itself: the request was not applied. */
-        tl_log_line("pvz2: the sun multiplier: the sun's value (guest %#x) is not a baked "
-                    "hook site in this build; the multiplier does nothing", GUEST_SUN_VALUE);
-        return;
-    }
-    g_sun_value_original = (int (*)(void *))original;
-    tl_log_line("pvz2: the sun multiplier: hooked the sun's value (guest %#x), x%d",
-                GUEST_SUN_VALUE, atomic_load(&g_sun_multiplier));
+    cheat_install_one(hook, &g_cheat_sun, cheat_sun_value);
+    cheat_install_one(hook, &g_cheat_coin, cheat_coin_value);
 }
 
 /* The refill, on the game's own thread after a frame. Only in PlayingLevel:
