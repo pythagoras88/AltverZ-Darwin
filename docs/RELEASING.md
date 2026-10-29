@@ -31,7 +31,7 @@ remains the fallback for a build without a profile.
 repository keeps the APK as an asset of a **draft** release named "Build inputs (never publish)"
 (tag `build-inputs`, which a draft does not create). A draft is visible only to people with write
 access to the repository, and to the workflow's own token, so nothing is published. The workflow
-downloads `PvZ2-AltVerZ-1.8.3f.apk` from it when `apk_url` is empty (failing that, the same name
+downloads `PvZ2-AltVerZ-modded-1.8.3f.apk` from it when `apk_url` is empty (failing that, the same name
 in any draft, then any `.apk` in a draft; `build.sh` refuses a different build). For a new game version, attach
 its APK to that draft (Releases > the draft > Edit). **Never publish it.** A fork has no such draft:
 it passes a link.
@@ -45,13 +45,13 @@ release is marked as a prerelease while the port is young.
 A release of both platforms and variants holds:
 
 ```text
-PvZ2-AltVerZ-<game>-Darwin-<version>-iOS.ipa
-PvZ2-AltVerZ-<game>-Darwin-<version>-iOS-Full.ipa
-PvZ2-AltVerZ-<game>-Darwin-<version>-Mac.dmg
-PvZ2-AltVerZ-<game>-Darwin-<version>-Mac-Full.dmg
+PvZ2-AltVerZ-modded-<game>-Darwin-<version>.ipa
+PvZ2-AltVerZ-modded-<game>-Darwin-<version>-Full.ipa
+PvZ2-AltVerZ-modded-<game>-Darwin-<version>-Mac.dmg
+PvZ2-AltVerZ-modded-<game>-Darwin-<version>-Mac-Full.dmg
 ```
 
-For example: `PvZ2-AltVerZ-1.8.3f-Darwin-0.1.0-iOS.ipa`. Slim is a small download; the app
+For example: `PvZ2-AltVerZ-modded-1.8.3f-Darwin-0.1.0.ipa`. Slim is a small download; the app
 downloads the game's data (about 1.1 GB) on first launch. Full has the data inside, for an offline
 first launch. Selecting one platform or variant publishes just those files.
 
@@ -96,8 +96,8 @@ signs the slim Mac DMG and commits the AltVerZ Mac update feed `sparkle/appcast.
 
 - **iPhone/iPad**: the IPA is ad-hoc signed. Every sideloader (AltStore, SideStore, Sideloadly,
   LiveContainer) re-signs it with the installing person's own Apple ID, so updates keep their data
-  as long as the app ID (`io.github.oenderg.altverz-darwin`) stays the same.
-- **Mac**: the same app ID, `io.github.oenderg.altverz-darwin`. Saves stay in the same data folder
+  as long as the app ID (`io.github.pythagoras88.altverz-modded`) stays the same.
+- **Mac**: the same app ID, `io.github.pythagoras88.altverz-modded`. Saves stay in the same data folder
   across updates. `BUNDLE_ID` overrides the ID on either platform for test or device builds.
 - **Mac**: the app is ad-hoc signed and not notarized, so macOS refuses the first open; the player
   clicks Open Anyway in System Settings > Privacy & Security (right-click > Open no longer does it).

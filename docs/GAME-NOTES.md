@@ -82,9 +82,14 @@ at `+0xe0` is the check that it is the board's).
 | 0xa9d838 | the board's collect award: per class (`0x75a52c` sun, `0x9c8eb4` coin, ...), its value, then AddSun or the wallet's listeners | (where the values go) |
 | 0x9c8fdc | a collected coin's value (`CollectableCoin`: silver, gold, diamond) | the coin multiplier's hook |
 
-- **Unlimited plant food** is the setter with the max, from the frame loop every 10 frames, in
-  PlayingLevel only and only when the count is below the max. A level without plant food has a
-  max of 0 and is left alone.
+- **Unlimited plant food** is the setter, from the frame loop every 10 frames, in PlayingLevel
+  only. It remembers the most plant food the game itself has given on this board (the level's
+  start, a collected drop) and puts a used one back, up to that; the mark starts over on a new
+  board and whenever the board leaves PlayingLevel. It never gives plant food the game has not:
+  the first levels are scripted tutorials that decide when the player gets plant food, and an
+  early grant (the first version topped up to the max at once) left a fresh save's first level
+  waiting for a step that never came, ignoring every tap. A level without plant food has a max
+  of 0 and is left alone.
 - **The sun multiplier** hooks `0x75a96c`. Its callers are the collect award (`0xa9d888`, which
   passes the value to AddSun), the board's "sun still in flight" (`0xaa3760` in `0xaa35e4`, which
   AddSun's cap also reads) and the sun statistics, so scaling the value at its source keeps them

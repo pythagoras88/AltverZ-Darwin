@@ -261,7 +261,7 @@ cat > "$APP/Settings.bundle/Root.plist" <<'PLIST'
         <dict>
             <key>Type</key><string>PSGroupSpecifier</string>
             <key>Title</key><string>Cheats</string>
-            <key>FooterText</key><string>Unlimited plant food fills the counter back up a moment after you use one, in every level that has plant food. The multipliers make every sun and coin (silver, gold and diamond) you collect on the lawn worth more (sun x10: 250 instead of 25), up to the game's own limits; level rewards are not changed. A change takes effect when you go back to the game.</string>
+            <key>FooterText</key><string>Unlimited plant food: once the game has given you plant food in a level, a used one comes back a moment later; it never gives you plant food the game hasn't (the first levels' tutorials decide that). The multipliers make every sun and coin (silver, gold and diamond) you collect on the lawn worth more (sun x10: 250 instead of 25), up to the game's own limits; level rewards are not changed. A change takes effect when you go back to the game.</string>
         </dict>
         <dict>
             <key>Type</key><string>PSToggleSwitchSpecifier</string>
@@ -276,12 +276,12 @@ cat > "$APP/Settings.bundle/Root.plist" <<'PLIST'
             <key>DefaultValue</key><integer>1</integer>
             <key>Titles</key>
             <array>
-                <string>Off</string><string>x2</string><string>x3</string>
+                <string>Off</string><string>x2</string><string>x3</string><string>x4</string>
                 <string>x5</string><string>x10</string><string>x20</string>
             </array>
             <key>Values</key>
             <array>
-                <integer>1</integer><integer>2</integer><integer>3</integer>
+                <integer>1</integer><integer>2</integer><integer>3</integer><integer>4</integer>
                 <integer>5</integer><integer>10</integer><integer>20</integer>
             </array>
         </dict>
