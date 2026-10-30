@@ -4,7 +4,7 @@ What this fork ([pythagoras88/AltverZ-Darwin](https://github.com/pythagoras88/Al
 [oenderg/AltverZ-Darwin](https://github.com/oenderg/AltverZ-Darwin). The original project's own release
 notes are in [release-notes/](release-notes/).
 
-## Unreleased
+## 2026-10-30
 
 - **Gauntlet multiplier** (×2 to ×10): the gauntlets quests and Weekly Challenges give you are
   multiplied (×10: a 3-gauntlet reward gives 30). AltVerZ's gauntlets are the game's gems with a new
