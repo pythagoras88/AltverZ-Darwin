@@ -81,6 +81,7 @@ at `+0xe0` is the check that it is the board's).
 | 0x75a96c | a collected sun's value (`CollectableSun`) | the sun multiplier's hook |
 | 0xa9d838 | the board's collect award: per class (`0x75a52c` sun, `0x9c8eb4` coin, ...), its value, then AddSun or the wallet's listeners | (where the values go) |
 | 0x9c8fdc | a collected coin's value (`CollectableCoin`: silver, gold, diamond) | the coin multiplier's hook |
+| player +0x124 / 0x123e734, +0x12c / 0x1240514 | the wallet's coins and gems, and their add functions (the player from the singleton at 0x2569fa8, its vtable +0x18) | the gauntlet multiplier's hook (add-gems) |
 
 - **Unlimited plant food** is the setter, from the frame loop every 10 frames, in PlayingLevel
   only. It remembers the most plant food the game itself has given on this board (the level's
@@ -102,6 +103,16 @@ at `+0xe0` is the check that it is the board's).
   hands the value to the wallet's listeners), the click that starts the flight (`0xa9cac8`) and the
   level statistics. Fake coins (`0x9c92c8`) have their own value function and are not hooked; neither
   are level rewards. It also starts with `sub sp, sp, #0x40`.
+- **Gauntlets are gems.** AltVerZ shows the gem counter with the Arena's gauntlet image
+  (`IMAGE_UI_JOUST_HUD_MENUS_GAUNTLET_CURRENCY_COUNTER`), and every quest its text says gives "a
+  handful of gauntlets" (the community quests, Weekly Challenges 170-277) awards
+  `{"Type": "gems", "Amount": 3}` in the CDN's `QUESTS.rton`. They are rewards, not lawn pickups, so
+  **the gauntlet multiplier** hooks the player's add-gems, `0x1240514(player, amount, notify)`: it adds
+  to the wallet's `+0x12c` and tells its listeners. Its callers are the reward dispatcher
+  (`0x13d4c54`, quest and challenge awards), a collected gem (`0xa9cb90`), the tutorial's one-time
+  grant of the world map's shown gems (`TutorialGrantUnusedFakeGemsAction`, `0xc93990`) and a
+  developer grant (`0xcdc344`). Spending does not come here, and only a positive amount is scaled.
+  The site starts with `str x23, [sp, #-0x40]!`, which the trampoline copies as it is.
 
 ## Test hooks (test builds only)
 

@@ -3315,11 +3315,22 @@ static void guest_collect_sun(void)
  * Fake coins have a value function of their own (0x9c92c8) and are left
  * alone. Each needs a hook, so the sites are baked into the converted
  * library (the profile's driver_hook_sites); a build without one logs that
- * its multiplier does nothing. */
+ * its multiplier does nothing.
+ *
+ * Gauntlets. AltVerZ shows gems as gauntlets (the Arena's currency counter
+ * image): every quest its text says gives "a handful of gauntlets" awards
+ * {"Type": "gems", "Amount": 3} in QUESTS.rton. They are rewards, not lawn
+ * pickups, so the multiplier hooks the player's own add-gems, 0x1240514(player,
+ * amount, notify), which adds to the wallet's +0x12c and tells its listeners.
+ * Its callers: the reward dispatcher (0x13d4c54: quest and challenge awards),
+ * a collected gem (0xa9cb90), the tutorial's one-time grant of the world map's
+ * shown gems (0xc93990) and a developer grant. Spending does not come here,
+ * and only a positive amount is scaled. */
 #define GUEST_SET_PLANT_FOOD       0xaa390c
 #define GUEST_BOARD_PLANT_FOOD     0x140
 #define GUEST_BOARD_PLANT_FOOD_MAX 0x2e6
 #define GUEST_COIN_VALUE           0x9c8fdc
+#define GUEST_ADD_GEMS             0x1240514
 #define PVZ2_CHEAT_MULTIPLIER_MAX  100
 
 typedef struct {
@@ -3350,6 +3361,30 @@ static void cheat_set_multiplier(cheat_value_hook *h, int times)
 
 void tl_pvz2_set_sun_multiplier(int times)  { cheat_set_multiplier(&g_cheat_sun, times); }
 void tl_pvz2_set_coin_multiplier(int times) { cheat_set_multiplier(&g_cheat_coin, times); }
+
+static atomic_int g_gauntlet_multiplier = 1;
+static void (*g_add_gems_original)(void *player, int amount, int notify);
+
+void tl_pvz2_set_gauntlet_multiplier(int times)
+{
+    if (times < 1) times = 1;
+    if (times > PVZ2_CHEAT_MULTIPLIER_MAX) times = PVZ2_CHEAT_MULTIPLIER_MAX;
+    atomic_store(&g_gauntlet_multiplier, times);
+    tl_log_line("pvz2: the gauntlet multiplier is x%d%s", times,
+                times > 1 && !g_add_gems_original ? " (not hooked yet)" : "");
+}
+
+/* The replacement for the player's add-gems: a reward is scaled before the
+ * game adds it, so the wallet, its listeners and the counter see one amount. */
+static void cheat_add_gems(void *player, int amount, int notify)
+{
+    int times = atomic_load_explicit(&g_gauntlet_multiplier, memory_order_relaxed);
+    if (times > 1 && amount > 0 && amount <= INT32_MAX / times) {
+        tl_log_line("pvz2: the gauntlet multiplier: +%d -> +%d", amount, amount * times);
+        amount *= times;
+    }
+    g_add_gems_original(player, amount, notify);
+}
 
 /* The replacements. The game calls them from its own code, on its own
  * thread, so each original is called directly, the way the mod's own
@@ -3389,6 +3424,17 @@ static void cheats_install_hooks(void)
         tl_aot_ready() ? (int (*)(void *, void *, void **))dlsym(RTLD_DEFAULT, "A64HookFunction") : NULL;
     cheat_install_one(hook, &g_cheat_sun, cheat_sun_value);
     cheat_install_one(hook, &g_cheat_coin, cheat_coin_value);
+    void *site = guest_code(GUEST_ADD_GEMS);
+    void *original = NULL;
+    if (!hook || !site || hook(site, (void *)cheat_add_gems, &original) != 0 ||
+        !original || original == site) {
+        tl_log_line("pvz2: the gauntlet multiplier: guest %#x is not a baked hook site in this "
+                    "build; the multiplier does nothing", GUEST_ADD_GEMS);
+        return;
+    }
+    g_add_gems_original = (void (*)(void *, int, int))original;
+    tl_log_line("pvz2: the gauntlet multiplier: hooked the player's add-gems (guest %#x), x%d",
+                GUEST_ADD_GEMS, atomic_load(&g_gauntlet_multiplier));
 }
 
 /* The refill, on the game's own thread after a frame, in PlayingLevel only.

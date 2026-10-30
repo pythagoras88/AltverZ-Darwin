@@ -4,7 +4,7 @@
 // watches them, so a change acts at once -- there is no "save".
 //
 //   General   the window: Fixed (one shape) or Adapt, the shape, what closing it does,
-//             and the cheats (unlimited plant food, the sun and coin multipliers)
+//             and the cheats (unlimited plant food, the sun, coin and gauntlet multipliers)
 //   Keyboard  the key for each seed packet, the shovel, collecting, fast-forward,
 //             plant food and the power-ups (click a field, press a key)
 //   About     the version, updates, and where the saves and the log are
@@ -40,6 +40,7 @@ private enum Key {
     static let unlimitedPlantFood = "unlimitedPlantFood"
     static let sunMultiplier = "sunMultiplier"
     static let coinMultiplier = "coinMultiplier"
+    static let gauntletMultiplier = "gauntletMultiplier"
     /// Sparkle's own key; the host hands a change to the updater
     static let automaticChecks = "SUEnableAutomaticChecks"
 }
@@ -284,6 +285,7 @@ private struct GeneralPane: View {
     @AppStorage(Key.unlimitedPlantFood) private var unlimitedPlantFood = false
     @AppStorage(Key.sunMultiplier) private var sunMultiplier = 1
     @AppStorage(Key.coinMultiplier) private var coinMultiplier = 1
+    @AppStorage(Key.gauntletMultiplier) private var gauntletMultiplier = 1
 
     /// "Letterbox" is the old name of the fixed mode.
     private var mode: Binding<String> {
@@ -394,10 +396,20 @@ private struct GeneralPane: View {
                     .labelsHidden()
                     .fixedSize()
                 }
+                ResettableRow(title: "Gauntlet multiplier", isDefault: gauntletMultiplier == 1,
+                              reset: { gauntletMultiplier = 1 }) {
+                    Picker("", selection: $gauntletMultiplier) {
+                        Text("Off").tag(1)
+                        ForEach([2, 3, 5, 10], id: \.self) { Text("×\($0)").tag($0) }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .fixedSize()
+                }
             } header: {
                 Text("Cheats")
             } footer: {
-                Text("Unlimited plant food: once the game has given you plant food in a level, a used one comes back a moment later; it never gives you plant food the game hasn't (the first levels' tutorials decide that). The multipliers make every sun and coin (silver, gold and diamond) you collect on the lawn worth more (sun ×10: 250 instead of 25), up to the game's own limits; level rewards are not changed. All of them act at once.")
+                Text("Unlimited plant food: once the game has given you plant food in a level, a used one comes back a moment later; it never gives you plant food the game hasn't (the first levels' tutorials decide that). The multipliers make every sun and coin (silver, gold and diamond) you collect on the lawn worth more (sun ×10: 250 instead of 25), up to the game's own limits; level rewards are not changed. The gauntlet multiplier scales the gauntlets quests and challenges give you. All of them act at once.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

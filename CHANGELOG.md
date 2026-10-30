@@ -4,6 +4,12 @@ What this fork ([pythagoras88/AltverZ-Darwin](https://github.com/pythagoras88/Al
 [oenderg/AltverZ-Darwin](https://github.com/oenderg/AltverZ-Darwin). The original project's own release
 notes are in [release-notes/](release-notes/).
 
+## Unreleased
+
+- **Gauntlet multiplier** (×2 to ×10): the gauntlets quests and Weekly Challenges give you are
+  multiplied (×10: a 3-gauntlet reward gives 30). AltVerZ's gauntlets are the game's gems with a new
+  picture, so it applies to every gem the game gives you.
+
 ## 2026-10-29
 
 **Cheats**, all off until you turn them on: on iPhone and iPad in the iOS Settings app under
