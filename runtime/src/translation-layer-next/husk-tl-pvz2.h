@@ -196,6 +196,12 @@ void tl_pvz2_request_low_memory(void);
 void tl_pvz2_set_unlimited_plant_food(int on);
 void tl_pvz2_set_sun_multiplier(int times);
 void tl_pvz2_set_coin_multiplier(int times);
+/* AltVerZ's gauntlets are gems: this scales every gem the player is given
+ * (quest rewards above all) at the player's own add-gems (guest 0x1240514). */
+void tl_pvz2_set_gauntlet_multiplier(int times);
+/* Give the player this many gauntlets once, through the game's own add-gems
+ * (not multiplied), as soon as the game has started and made its player. */
+void tl_pvz2_request_give_gauntlets(int amount);
 
 /* The guest's own UI geometry, in the surface's space: the seed tray's rect and
  * the shovel button's rect, each x, y, w, h.
