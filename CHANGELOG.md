@@ -9,6 +9,9 @@ notes are in [release-notes/](release-notes/).
 - **Gauntlet multiplier** (×2 to ×10): the gauntlets quests and Weekly Challenges give you are
   multiplied (×10: a 3-gauntlet reward gives 30). AltVerZ's gauntlets are the game's gems with a new
   picture, so it applies to every gem the game gives you.
+- **Give gauntlets**: adds 100, 1,000 or 10,000 gauntlets once, through the game's own wallet. On
+  iPhone and iPad it is a choice in the Settings app that is used when you switch back to the game
+  and then resets itself; on the Mac it is a button in Settings > General.
 
 ## 2026-10-29
 

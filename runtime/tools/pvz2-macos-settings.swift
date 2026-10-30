@@ -41,6 +41,8 @@ private enum Key {
     static let sunMultiplier = "sunMultiplier"
     static let coinMultiplier = "coinMultiplier"
     static let gauntletMultiplier = "gauntletMultiplier"
+    /// A one-time grant: the host gives this many and sets it back to 0
+    static let giveGauntlets = "giveGauntlets"
     /// Sparkle's own key; the host hands a change to the updater
     static let automaticChecks = "SUEnableAutomaticChecks"
 }
@@ -396,6 +398,15 @@ private struct GeneralPane: View {
                     .labelsHidden()
                     .fixedSize()
                 }
+                LabeledContent("Give gauntlets") {
+                    HStack {
+                        ForEach([100, 1000, 10000], id: \.self) { amount in
+                            Button("+\(amount.formatted())") {
+                                UserDefaults.standard.set(amount, forKey: Key.giveGauntlets)
+                            }
+                        }
+                    }
+                }
                 ResettableRow(title: "Gauntlet multiplier", isDefault: gauntletMultiplier == 1,
                               reset: { gauntletMultiplier = 1 }) {
                     Picker("", selection: $gauntletMultiplier) {
@@ -409,7 +420,7 @@ private struct GeneralPane: View {
             } header: {
                 Text("Cheats")
             } footer: {
-                Text("Unlimited plant food: once the game has given you plant food in a level, a used one comes back a moment later; it never gives you plant food the game hasn't (the first levels' tutorials decide that). The multipliers make every sun and coin (silver, gold and diamond) you collect on the lawn worth more (sun ×10: 250 instead of 25), up to the game's own limits; level rewards are not changed. The gauntlet multiplier scales the gauntlets quests and challenges give you. All of them act at once.")
+                Text("Unlimited plant food: once the game has given you plant food in a level, a used one comes back a moment later; it never gives you plant food the game hasn't (the first levels' tutorials decide that). The multipliers make every sun and coin (silver, gold and diamond) you collect on the lawn worth more (sun ×10: 250 instead of 25), up to the game's own limits; level rewards are not changed. The gauntlet multiplier scales the gauntlets quests and challenges give you; Give gauntlets adds that many to your wallet once. All of them act at once.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

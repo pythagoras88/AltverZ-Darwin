@@ -113,6 +113,9 @@ at `+0xe0` is the check that it is the board's).
   grant of the world map's shown gems (`TutorialGrantUnusedFakeGemsAction`, `0xc93990`) and a
   developer grant (`0xcdc344`). Spending does not come here, and only a positive amount is scaled.
   The site starts with `str x23, [sp, #-0x40]!`, which the trampoline copies as it is.
+- **Give gauntlets** asks the game for its player the way every wallet caller does (the singleton
+  in `.bss` at `0x2569fa8`, its vtable `+0x18`) and calls the original add-gems with the amount,
+  past the multiplier, on the game's thread once `tl_pvz2_started()` and the singleton exists.
 
 ## Test hooks (test builds only)
 

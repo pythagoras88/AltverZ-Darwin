@@ -39,6 +39,7 @@ builds come from its **Actions** tab (see below). Everything else works the same
 | **Sun multiplier** (×2, ×3, ×4, ×5, ×10, ×20) | Every sun you collect is worth more: ×10 makes a 25 sun worth 250. The level's own sun limit still applies. |
 | **Coin multiplier** (×2 to ×10) | Every silver, gold and diamond coin you collect on the lawn is worth more. Fake coins and level rewards are not changed. |
 | **Gauntlet multiplier** (×2 to ×10) | The gauntlets (the zombie-hand currency) quests and Weekly Challenges give you are multiplied: ×10 turns a 3-gauntlet reward into 30. AltVerZ's gauntlets are the game's gems with a new picture, so gems you are given anywhere count too. |
+| **Give gauntlets** (100, 1,000 or 10,000) | Adds that many gauntlets to your wallet once. On iPhone and iPad pick an amount in Settings and switch back to the game (it goes back to "Nothing" by itself); on the Mac press +100, +1,000 or +10,000. |
 
 All of them are **off until you turn them on**, and a change applies while you play:
 

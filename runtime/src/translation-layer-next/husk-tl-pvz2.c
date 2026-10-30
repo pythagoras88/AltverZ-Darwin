@@ -3331,6 +3331,12 @@ static void guest_collect_sun(void)
 #define GUEST_BOARD_PLANT_FOOD_MAX 0x2e6
 #define GUEST_COIN_VALUE           0x9c8fdc
 #define GUEST_ADD_GEMS             0x1240514
+/* The singleton the wallet hangs off, and its vtable slot that answers the
+ * player: every add-coins and add-gems caller asks it this way (0x11641e8,
+ * 0xa9cb5c). It is in libPVZ2's .bss, made by the game on first use. */
+#define GUEST_PLAYER_SOURCE_SLOT   0x2569fa8
+#define GUEST_PLAYER_SOURCE_PLAYER 0x18
+#define PVZ2_GIVE_GAUNTLETS_MAX    1000000
 #define PVZ2_CHEAT_MULTIPLIER_MAX  100
 
 typedef struct {
@@ -3398,6 +3404,39 @@ static int cheat_scaled(cheat_value_hook *h, void *object)
 }
 static int cheat_sun_value(void *sun)   { return cheat_scaled(&g_cheat_sun, sun); }
 static int cheat_coin_value(void *coin) { return cheat_scaled(&g_cheat_coin, coin); }
+
+/* Give gauntlets: a one-time grant the player asks for, done with the game's
+ * own add-gems on its own thread once the game has started and has made the
+ * player. The original is called past the multiplier's hook, so the amount
+ * asked for is the amount given. A request waits until then. */
+static atomic_int g_give_gauntlets;
+
+void tl_pvz2_request_give_gauntlets(int amount)
+{
+    if (amount < 1) return;
+    if (amount > PVZ2_GIVE_GAUNTLETS_MAX) amount = PVZ2_GIVE_GAUNTLETS_MAX;
+    atomic_store(&g_give_gauntlets, amount);
+    tl_log_line("pvz2: give gauntlets: %d asked for", amount);
+}
+
+static void guest_give_gauntlets(void)
+{
+    if (atomic_load(&g_give_gauntlets) <= 0 || !tl_pvz2_started()) return;
+    uint8_t *slot = tl_aot_guest_data_ptr("libPVZ2.so", GUEST_PLAYER_SOURCE_SLOT);
+    uint64_t source = 0, vtable = 0, fn = 0;
+    if (!slot || !guest_read_bytes((uint64_t)(uintptr_t)slot, &source, sizeof source) || !source ||
+        !guest_read_bytes(source, &vtable, sizeof vtable) || !vtable ||
+        !guest_read_bytes(vtable + GUEST_PLAYER_SOURCE_PLAYER, &fn, sizeof fn) || !fn)
+        return;   /* the game has not made its player yet: the request waits */
+    bool ok = false;
+    uint64_t player = guest_call2((void *)(uintptr_t)fn, source, 0, &ok);
+    if (!ok || !player) return;
+    int amount = atomic_exchange(&g_give_gauntlets, 0);
+    if (amount <= 0) return;
+    void *add = g_add_gems_original ? (void *)g_add_gems_original : guest_code(GUEST_ADD_GEMS);
+    guest_call3(add, player, (uint64_t)(uint32_t)amount, 0, &ok);
+    tl_log_line("pvz2: give gauntlets: %s %d", ok ? "gave" : "could not give", amount);
+}
 
 static void cheat_install_one(int (*hook)(void *, void *, void **), cheat_value_hook *h,
                               int (*replacement)(void *))
@@ -5937,6 +5976,8 @@ static void *gl_main(void *arg)
         if (atomic_exchange(&g_fast_forward_pending, 0)) guest_fast_forward();
         /* Unlimited plant food: a used one is back a few frames later. */
         if ((tl_pvz2_frames() % 10) == 0) guest_refill_plant_food();
+        /* Give gauntlets, once the game has its player. */
+        if ((tl_pvz2_frames() % 30) == 15) guest_give_gauntlets();
         /* The plant food and power-up presses are taps: the down now, the up
          * a frame later, as a finger does. */
         if (g_plant_food_touch_down) {
